@@ -69,7 +69,7 @@ docker-build: ## Build Docker image
 	sudo docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 
 docker-run: ## Run application in Docker with docker-compose
-	sudo docker-compose up -d
+	sudo docker-compose up
 
 docker-stop: ## Stop Docker containers
 	sudo docker-compose down
