@@ -1,8 +1,10 @@
 # MAIN COMMANDS
-# make devStart (Start developmentwith hot reload)
+# make dev (Start development with hot reload)
+# make dev-local (Start development locally without Docker)
 # make test (Run tests)
 # make build (Build for production)
-# make docker-run (Use Docker)
+# make docker-run (Use Docker - full stack)
+# make docker-db (Start only PostgreSQL database)
 
 # Go parameters
 GOCMD=go
@@ -57,17 +59,26 @@ run: build ## Build and run the application
 dev: ## Run the application with Air (hot reload)
 	air
 
+dev-local: ## Run locally without Docker (requires local PostgreSQL)
+	@echo "Starting local development..."
+	@echo "Make sure PostgreSQL is running and database exists"
+	@echo "Run 'make migrate-up' if you haven't run migrations"
+	air
+
 docker-build: ## Build Docker image
-	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
+	sudo docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .
 
 docker-run: ## Run application in Docker with docker-compose
-	docker-compose up -d
+	sudo docker-compose up -d
 
 docker-stop: ## Stop Docker containers
-	docker-compose down
+	sudo docker-compose down
 
 docker-logs: ## Show Docker logs
-	docker-compose logs -f
+	sudo docker-compose logs -f
+
+docker-db: ## Start only PostgreSQL database
+	sudo docker-compose -f docker-compose.db.yml up -d
 
 migrate-up: ## Run database migrations up
 	migrate -path migrations -database "$(DB_URL)" up

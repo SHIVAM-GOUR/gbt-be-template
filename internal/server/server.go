@@ -35,9 +35,18 @@ func New(cfg *config.Config, log *logger.Logger) (*Server, error) {
 		return nil, fmt.Errorf("failed to initialize database: %w", err)
 	}
 
-	// Run auto migration
-	if err := db.AutoMigrate(); err != nil {
-		return nil, fmt.Errorf("failed to run auto migration: %w", err)
+	// Run auto migration only in development mode when not using Docker
+	// In Docker, we use proper migrations via migrate container
+	skipAutoMigrate := os.Getenv("SKIP_AUTO_MIGRATE")
+	log.Info("Auto migration check", "skip_auto_migrate", skipAutoMigrate, "is_development", cfg.IsDevelopment())
+
+	if cfg.IsDevelopment() && skipAutoMigrate != "true" {
+		log.Info("Running auto migration")
+		if err := db.AutoMigrate(); err != nil {
+			return nil, fmt.Errorf("failed to run auto migration: %w", err)
+		}
+	} else {
+		log.Info("Skipping auto migration", "reason", "skip_auto_migrate=true or not development")
 	}
 
 	// Initialize repositories
@@ -46,7 +55,7 @@ func New(cfg *config.Config, log *logger.Logger) (*Server, error) {
 	// Initialize services
 	authService := services.NewAuthService(repos.User, cfg, log)
 	userService := services.NewUserService(repos.User, authService, cfg, log)
-	
+
 	services := &services.Services{
 		User: userService,
 		Auth: authService,
