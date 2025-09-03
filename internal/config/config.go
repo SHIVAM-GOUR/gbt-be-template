@@ -18,6 +18,12 @@ type Config struct {
 	Logger    LoggerConfig
 	CORS      CORSConfig
 	RateLimit RateLimitConfig
+	Log      LogConfig
+}
+
+type LogConfig struct {
+    Level  string
+    Format string
 }
 
 // ServerConfig holds server configuration

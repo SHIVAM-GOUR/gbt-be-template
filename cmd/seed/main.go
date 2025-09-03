@@ -10,7 +10,6 @@ import (
 	"gbt-be-template/internal/config"
 	"gbt-be-template/internal/models"
 	"gbt-be-template/internal/repository"
-	"gbt-be-template/pkg/logger"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -37,10 +36,11 @@ func main() {
 	}
 
 	// Initialize logger
-	logger := logger.New(cfg.Log.Level, cfg.Log.Format)
+	// logger := logger.New(cfg.Log.Level, cfg.Log.Format)
+	// removed logger from below "db, err := repository.NewDatabase(cfg)" because newDatabase function accept only 1 argument
 
 	// Initialize database
-	db, err := repository.NewDatabase(cfg, logger)
+	db, err := repository.NewDatabase(cfg)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}

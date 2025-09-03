@@ -81,6 +81,14 @@ func (m *MockUserService) Logout(ctx context.Context, userID uint) error {
 	return args.Error(0)
 }
 
+func (m *MockUserService) AdminUpdate(ctx context.Context, id uint, req *models.AdminUserUpdateRequest) (*models.UserResponse, error) {
+	args := m.Called(ctx, id, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*models.UserResponse), args.Error(1)
+}
+
 func setupUserHandler() (*UserHandler, *MockUserService) {
 	mockService := &MockUserService{}
 	log := logger.New("info", "text")
