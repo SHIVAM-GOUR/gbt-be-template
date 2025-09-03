@@ -45,6 +45,16 @@ type UserUpdateRequest struct {
 	IsActive  *bool   `json:"is_active,omitempty"`
 }
 
+// AdminUserUpdateRequest represents the request payload for admin updating a user
+type AdminUserUpdateRequest struct {
+	Email     *string `json:"email,omitempty" validate:"omitempty,email"`
+	Username  *string `json:"username,omitempty" validate:"omitempty,min=3,max=50"`
+	FirstName *string `json:"first_name,omitempty" validate:"omitempty,min=1,max=100"`
+	LastName  *string `json:"last_name,omitempty" validate:"omitempty,min=1,max=100"`
+	IsActive  *bool   `json:"is_active,omitempty"`
+	IsAdmin   *bool   `json:"is_admin,omitempty"` // Only admins can modify this
+}
+
 // UserLoginRequest represents the request payload for user login
 type UserLoginRequest struct {
 	Email    string `json:"email" validate:"required,email"`

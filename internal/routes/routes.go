@@ -83,7 +83,8 @@ func (rt *Router) SetupRoutes() *chi.Mux {
 
 				// Admin user management
 				r.Route("/admin/users", func(r chi.Router) {
-					r.Post("/", userHandler.Create) // Admin can create users
+					r.Post("/", userHandler.Create)         // Admin can create users
+					r.Put("/{id}", userHandler.AdminUpdate) // Admin can update any user including admin status
 				})
 			})
 		})

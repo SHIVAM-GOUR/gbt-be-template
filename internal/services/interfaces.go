@@ -12,6 +12,7 @@ type UserService interface {
 	GetByID(ctx context.Context, id uint) (*models.UserResponse, error)
 	GetByEmail(ctx context.Context, email string) (*models.UserResponse, error)
 	Update(ctx context.Context, id uint, req *models.UserUpdateRequest) (*models.UserResponse, error)
+	AdminUpdate(ctx context.Context, id uint, req *models.AdminUserUpdateRequest) (*models.UserResponse, error)
 	Delete(ctx context.Context, id uint) error
 	List(ctx context.Context, page, limit int) ([]*models.UserResponse, int64, error)
 	Login(ctx context.Context, req *models.UserLoginRequest) (string, *models.UserResponse, error)

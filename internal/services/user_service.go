@@ -168,6 +168,70 @@ func (s *userService) Update(ctx context.Context, id uint, req *models.UserUpdat
 	return user.ToResponse(), nil
 }
 
+// AdminUpdate updates a user with admin privileges (can modify admin status)
+func (s *userService) AdminUpdate(ctx context.Context, id uint, req *models.AdminUserUpdateRequest) (*models.UserResponse, error) {
+	// Get existing user
+	user, err := s.userRepo.GetByID(ctx, id)
+	if err != nil {
+		s.log.WithError(err).WithField("user_id", id).Error("Failed to get user for admin update")
+		return nil, fmt.Errorf("failed to get user: %w", err)
+	}
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	// Update fields if provided
+	if req.Email != nil && *req.Email != user.Email {
+		// Check if new email is already taken
+		exists, err := s.userRepo.ExistsByEmail(ctx, *req.Email)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check email availability: %w", err)
+		}
+		if exists {
+			return nil, errors.New("email is already taken")
+		}
+		user.Email = *req.Email
+	}
+
+	if req.Username != nil && *req.Username != user.Username {
+		// Check if new username is already taken
+		exists, err := s.userRepo.ExistsByUsername(ctx, *req.Username)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check username availability: %w", err)
+		}
+		if exists {
+			return nil, errors.New("username is already taken")
+		}
+		user.Username = *req.Username
+	}
+
+	if req.FirstName != nil {
+		user.FirstName = *req.FirstName
+	}
+
+	if req.LastName != nil {
+		user.LastName = *req.LastName
+	}
+
+	if req.IsActive != nil {
+		user.IsActive = *req.IsActive
+	}
+
+	// Admin-only field: can modify admin status
+	if req.IsAdmin != nil {
+		user.IsAdmin = *req.IsAdmin
+	}
+
+	// Save updated user
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		s.log.WithError(err).WithField("user_id", id).Error("Failed to admin update user")
+		return nil, fmt.Errorf("failed to update user: %w", err)
+	}
+
+	s.log.WithField("user_id", id).Info("User admin updated successfully")
+	return user.ToResponse(), nil
+}
+
 // Delete deletes a user
 func (s *userService) Delete(ctx context.Context, id uint) error {
 	// Check if user exists
@@ -263,7 +327,7 @@ func (s *userService) Logout(ctx context.Context, userID uint) error {
 	// - Add the token to a blacklist
 	// - Store logout time in database
 	// - Invalidate refresh tokens
-	
+
 	s.log.WithField("user_id", userID).Info("User logged out successfully")
 	return nil
 }

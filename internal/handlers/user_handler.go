@@ -89,7 +89,7 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	// Check if user is updating their own profile or is admin
 	userID, _ := middleware.GetUserIDFromContext(r.Context())
 	isAdmin, _ := middleware.GetIsAdminFromContext(r.Context())
-	
+
 	if userID != uint(id) && !isAdmin {
 		utils.WriteErrorResponse(w, http.StatusForbidden, "You can only update your own profile", nil)
 		return
@@ -120,6 +120,40 @@ func (h *UserHandler) Update(w http.ResponseWriter, r *http.Request) {
 	utils.WriteSuccessResponse(w, http.StatusOK, "User updated successfully", user)
 }
 
+// AdminUpdate handles PUT /admin/users/{id} - Admin can update any user including admin status
+func (h *UserHandler) AdminUpdate(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		utils.WriteErrorResponse(w, http.StatusBadRequest, "Invalid user ID", nil)
+		return
+	}
+
+	var req models.AdminUserUpdateRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.log.WithError(err).Warn("Invalid JSON in admin update user request")
+		utils.WriteErrorResponse(w, http.StatusBadRequest, "Invalid JSON", nil)
+		return
+	}
+
+	// Validate request
+	if err := h.validator.Struct(&req); err != nil {
+		h.log.WithError(err).Warn("Validation failed for admin update user request")
+		utils.WriteErrorResponse(w, http.StatusBadRequest, "Validation failed", err.Error())
+		return
+	}
+
+	// Admin update user
+	user, err := h.userService.AdminUpdate(r.Context(), uint(id), &req)
+	if err != nil {
+		h.log.WithError(err).WithField("user_id", id).Error("Failed to admin update user")
+		utils.WriteErrorResponse(w, http.StatusBadRequest, err.Error(), nil)
+		return
+	}
+
+	utils.WriteSuccessResponse(w, http.StatusOK, "User updated successfully by admin", user)
+}
+
 // Delete handles DELETE /users/{id}
 func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
@@ -132,7 +166,7 @@ func (h *UserHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	// Check if user is deleting their own profile or is admin
 	userID, _ := middleware.GetUserIDFromContext(r.Context())
 	isAdmin, _ := middleware.GetIsAdminFromContext(r.Context())
-	
+
 	if userID != uint(id) && !isAdmin {
 		utils.WriteErrorResponse(w, http.StatusForbidden, "You can only delete your own profile", nil)
 		return
